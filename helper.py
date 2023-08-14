@@ -37,7 +37,7 @@ def create_wordcloud(selected_user,df):
     x = df[df['messages'] != '<Media omitted>']
     if selected_user != 'Overall':
         x =  x[x['users'] == selected_user]
-    wc = WordCloud(width=500,height=500,min_font_size=10,background_color='white')
+    wc = WordCloud(width=500,height=500,min_font_size=10,background_color='#262730')
     df_wc = wc.generate(x['messages'].str.cat(sep=' '))
     return df_wc
 
