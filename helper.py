@@ -79,23 +79,43 @@ def most_common_word(selected_user,df):
     return  most_df.head(10),common_emoji_df
 
 
-def fetch_timeline(selected_user,df):
+def fetch_month_timeline(selected_user,df):
     # selection of data frame
     if selected_user != 'Overall':
         df = df[df['users'] == selected_user]
-    temp = df.copy()
 
-    # monthly timeline
-    temp['month_num'] = temp['date_time'].dt.month
-    month_year_list = []
-    for i in range(len(temp)):
-        month_year_list.append(temp['month'][i] + '-' + temp['year'][i].astype(str))
-    temp['month_year'] = month_year_list
-    month_timeline = temp.groupby('month_year', sort=False).count().reset_index()
+    # creation of month timeline
+    timeline = df.groupby(['year', 'month', 'month_num'],sort=False).count()['messages'].reset_index()
+    month_year = []
+    for i in range(len(timeline)):
+        month_year.append(timeline['month'][i] + '-' + str(timeline['year'][i]))
+    timeline['month_year'] = month_year
+    return timeline
 
-    # daily timeline
-    only_date = temp['date_time'].dt.date
-    temp['only_date'] = only_date
-    day_timeline = temp.groupby('only_date').count().reset_index()
+def fetch_day_timeline(selected_user,df):
+    # selection of data frame
+    if selected_user != 'Overall':
+        df = df[df['users'] == selected_user]
 
-    return  month_timeline,day_timeline
+    # creation of daily timeline
+    df['only_date'] = df['date_time'].dt.date
+    timeline = df.groupby('only_date').count()['messages'].reset_index()
+    return  timeline
+
+def week_activity_map(selected_user,df):
+    # selection of data frame
+    if selected_user != 'Overall':
+        df = df[df['users'] == selected_user]
+    return  df['day_name'].value_counts()
+
+def month_activity_map(selected_user,df):
+    # selection of data frame
+    if selected_user != 'Overall':
+        df = df[df['users'] == selected_user]
+    return  df['month'].value_counts()
+
+def activity_heatmap(selected_user,df):
+    if selected_user != 'Overall':
+        df = df[df['users'] == selected_user]
+    user_heatmap = df.pivot_table(index='day_name', columns='period', values='messages', aggfunc='count').fillna(0)
+    return user_heatmap
