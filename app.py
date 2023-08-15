@@ -10,7 +10,7 @@ def custom_bar(x_data, y_data, style, custom):
     fig, ax = plt.subplots()
     ax.spines.top.set_visible(False)
     ax.spines.right.set_visible(False)
-    plt.xticks(rotation='vertical')
+    plt.xticks(rotation=70)
     # custom style
     if custom == True:
         fig.patch.set_facecolor(style.get("background"))
@@ -37,13 +37,14 @@ def plot_background(fig,ax):
 
 # st.set_page_config(layout="wide")
 st.sidebar.title("Whatsapp Chat Analyzer")
-
 uploaded_file = st.sidebar.file_uploader("Choose a file")
+
+
+
 if uploaded_file is not None:
     byte_data = uploaded_file.getvalue()
     data = byte_data.decode("utf-8")
     df = preprocessor.preprocess(data)
-
 
     user_list = df['users'].unique().tolist()
     user_list.remove('group_notification')
@@ -52,23 +53,20 @@ if uploaded_file is not None:
     selected_user = st.sidebar.selectbox('Show Analysis wrt',user_list)
 
     if st.sidebar.button("Show Analysis"):
-
-
         # --------------- GENERAL STATS -----------------#
         num_messages, num_words, num_media, num_linkes = helper.fetch_stats(selected_user, df)
+        st.header(":red[Whatsapp] Chat Analyzer")
+        st.divider()
         col1, col2, col3, col4 = st.columns(4)
+
         with col1:
-            st.subheader("Total Messages")
-            st.subheader(num_messages)
+            st.metric(label="Total Messages", value=num_messages)
         with col2:
-            st.subheader("Total Words")
-            st.subheader(num_words)
+            st.metric(label="Total Words", value=num_words)
         with col3:
-            st.subheader("Media shared")
-            st.subheader(num_media)
+            st.metric(label="Media shared", value=num_media)
         with col4:
-            st.subheader("Linke shared")
-            st.subheader(num_linkes)
+            st.metric(label="Linke shared", value=num_linkes)
 
         st.divider()
         # --------------------- ACTIVITY -------------------#
@@ -93,18 +91,20 @@ if uploaded_file is not None:
             }
             custom_bar(x_data=month_ac.index, y_data=month_ac.values, style=style, custom=True)
 
-        st.subheader("Weekly activity timeline")
-        user_heatmap = helper.activity_heatmap(selected_user,df)
+        st.divider()
+        #--------------------- TIMELINE -------------------#
+
+        # Day timeline
+        st.subheader("Daily Timeline")
+        day_timeline = helper.fetch_day_timeline(selected_user, df)
         fig, ax = plt.subplots()
-        plot_background(fig,ax)
-        ax = sns.heatmap(user_heatmap)
-        ax.set(xlabel=None)
-        ax.set(ylabel=None)
+        fig, ax = plot_background(fig, ax)
+        ax.plot(day_timeline['only_date'], day_timeline['messages'], color='#E966A0')
+        plt.xticks(rotation=70)
         st.pyplot(fig)
 
-        #--------------------- TIMELINE -------------------#
         # Month timeline
-        st.subheader("Monthly timeline")
+        st.subheader("Monthly Timeline")
         month_timeline = helper.fetch_month_timeline(selected_user,df)
         style = {
             "background": '#262730',
@@ -115,19 +115,21 @@ if uploaded_file is not None:
                    , style=style)
 
 
-        # Day timeline
-        st.subheader("Daily timeline")
-        day_timeline = helper.fetch_day_timeline(selected_user, df)
+
+
+        st.subheader("Weekly Activity Timeline")
+        user_heatmap = helper.activity_heatmap(selected_user, df)
         fig, ax = plt.subplots()
-        fig , ax = plot_background(fig,ax)
-        ax.plot(day_timeline['only_date'], day_timeline['messages'], color='#E966A0')
-        plt.xticks(rotation='vertical')
+        plot_background(fig, ax)
+        ax = sns.heatmap(user_heatmap)
+        ax.set(xlabel=None)
+        ax.set(ylabel=None)
         st.pyplot(fig)
 
-
+        st.divider()
         #------------- USER ANALYSIS -------------------#
         if selected_user == "Overall":
-            st.subheader('Most busy user')
+            st.subheader('Most Active')
             col1, col2 = st.columns(2)
             x,new_df = helper.fetch_most_busy_user(df)
             with col1:
@@ -138,7 +140,8 @@ if uploaded_file is not None:
                 }
                 custom_bar(x_data=x.index, y_data=x.values, style=style, custom=True)
             with col2:
-                st.dataframe(new_df)
+                new_df.rename(columns={'index':'username','name':'percentage(%)'},inplace=True)
+                st.dataframe(new_df,use_container_width=True)
             st.divider()
 
 
@@ -155,22 +158,45 @@ if uploaded_file is not None:
         ax.imshow(df_wc,interpolation='bilinear')
         st.pyplot(fig)
 
+
         st.divider()
         # ---------------- TOP COMMON WORD --------------#
-        st.subheader('Most used words')
+        st.subheader('Frequently used words')
         most_common, common_emoji_df= helper.most_common_word(selected_user, df)
         fig,ax = plt.subplots()
         plot_background(fig,ax)
-        ax.barh(most_common['word'],most_common['count'],color='#A1EAFB')
+        ax.barh(most_common['word'],most_common['count'],color='#9681EB')
         st.pyplot(fig)
 
 
-        #--------------- EMOJI ANALYSIS ------------------#
         st.divider()
-        st.subheader("Emoji analysis")
-        col1 , col2 = st.columns(2)
-        with col1:
-            st.dataframe(common_emoji_df)
-        with col2:
-            st.bar_chart(common_emoji_df,x='emoji',y='count')
+        #--------------- EMOJI ANALYSIS ------------------#
+        st.subheader("Frequently used emoji")
+        if len(common_emoji_df) != 0:
+            col1,col2 = st.columns(2)
+            with col1:
+                st.table(common_emoji_df)
+            with col2:
+                st.bar_chart(common_emoji_df,x='emoji',y='count',use_container_width=True)
+        else:
+            st.markdown(":orange[There are No Emojis Present in this Chat !!]")
+    else:
+        st.subheader(" If you have a **WhatsApp chat** you'd like to analyze, try out my web application! ")
+        st.markdown(" To get started, follow these simple steps :")
 
+        st.caption("1. Export your chat from WhatsApp as a **:red[.txt file.]**")
+        st.caption("2. **:red[Upload]** the file to the website. ")
+        st.caption("3. Click the **:red['Show Analysis']** button to see the overall analysis. ")
+        st.caption(
+            "4. Use the **:red[drop-down menu]** in the left sidebar to select different users and view their individual statistics. ")
+        st.caption(" How to export your Whatsapp chat https://shorturl.at/vxY14")
+
+else:
+    st.subheader(" If you have a **WhatsApp chat** you'd like to analyze, try out my web application! ")
+    st.markdown(" To get started, follow these simple steps :")
+
+    st.caption("1. Export your chat from WhatsApp as a **:red[.txt file.]**")
+    st.caption("2. **:red[Upload]** the file to the website. ")
+    st.caption("3. Click the **:red['Show Analysis']** button to see the overall analysis. ")
+    st.caption("4. Use the **:red[drop-down menu]** in the left sidebar to select different users and view their individual statistics. ")
+    st.caption(" How to export your Whatsapp chat https://shorturl.at/vxY14")

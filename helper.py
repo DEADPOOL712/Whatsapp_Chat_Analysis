@@ -29,6 +29,7 @@ def fetch_stats(selected_user,df):
     return total_msg, len(words), total_media, len(urls)
 
 def fetch_most_busy_user(df):
+     df= df[df['users'] != 'group_notification']
      x = df['users'].value_counts().head()
      new_df = round((df['users'].value_counts() / df.shape[0]) * 100, 2).reset_index().rename(
          columns={'users': 'name', 'count': 'percentages'})
@@ -62,6 +63,8 @@ def most_common_word(selected_user,df):
 
     # counting all emoji
     for w in words:
+        if '@' in w:
+            words.remove(w)
         if emoji.is_emoji(w):
             words.remove(w)
             emoji_list.append(w)
@@ -71,12 +74,13 @@ def most_common_word(selected_user,df):
     emoji_freq = Counter(emoji_list).most_common()
     common_emoji_df = pd.DataFrame(emoji_freq, columns=['emoji', 'count'])
 
+
     # creting new df for most common words
     most_common_word = Counter(words).most_common()
     most_df = pd.DataFrame(most_common_word, columns=['word', 'count'])
     # removing stop words
     most_df = most_df[~most_df['word'].isin(stop_words)]
-    return  most_df.head(10),common_emoji_df
+    return  most_df.head(15),common_emoji_df.head(8)
 
 
 def fetch_month_timeline(selected_user,df):
@@ -106,13 +110,13 @@ def week_activity_map(selected_user,df):
     # selection of data frame
     if selected_user != 'Overall':
         df = df[df['users'] == selected_user]
-    return  df['day_name'].value_counts()
+    return  df['day_name'].value_counts(sort=False)
 
 def month_activity_map(selected_user,df):
     # selection of data frame
     if selected_user != 'Overall':
         df = df[df['users'] == selected_user]
-    return  df['month'].value_counts()
+    return  df['month'].value_counts(sort=False)
 
 def activity_heatmap(selected_user,df):
     if selected_user != 'Overall':
