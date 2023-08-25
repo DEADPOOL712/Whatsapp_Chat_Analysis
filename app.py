@@ -198,6 +198,7 @@ if uploaded_file is not None:
         st.caption(
             "4. Use the **:red[drop-down menu]** in the left sidebar to select different users and view their individual statistics. ")
         st.caption(" How to export your Whatsapp chat https://shorturl.at/vxY14")
+        st.info('At the moment, this application is only compatible with the 12-hour clock format.', icon="ℹ️")
 
 else:
     st.subheader(" If you have a **WhatsApp chat** you'd like to analyze, try out my web application! ")
@@ -208,3 +209,4 @@ else:
     st.caption("3. Click the **:red['Show Analysis']** button to see the overall analysis. ")
     st.caption("4. Use the **:red[drop-down menu]** in the left sidebar to select different users and view their individual statistics. ")
     st.caption(" How to export your Whatsapp chat https://shorturl.at/vxY14")
+    st.info('At the moment, this application is only compatible with the 12-hour clock format.', icon="ℹ️")
