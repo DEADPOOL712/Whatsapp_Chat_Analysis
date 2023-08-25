@@ -1,5 +1,17 @@
 import pandas as pd
 import re
+def is_valid(data):
+    msg_pattern = '^\d{1,2}/\d{1,2}/\d{2},\s\d{1,2}:\d{2}\s[APap][Mm]\s-\s'
+    line_arr = data.split('\n')
+    valid_msg = []
+    for line in line_arr:
+        line = line.strip()
+        if re.match(msg_pattern, line):
+            valid_msg.append(line)
+    if len(valid_msg) == 0:
+        return False
+    return True
+
 def preprocess(data):
     msg_pattern = '^\d{1,2}/\d{1,2}/\d{2},\s\d{1,2}:\d{2}\s[APap][Mm]\s-\s'
     data_time_pattern = '^\d{1,2}/\d{1,2}/\d{2},\s\d{1,2}:\d{2}\s[APap][Mm]'

@@ -42,17 +42,25 @@ uploaded_file = st.sidebar.file_uploader("Choose a file")
 
 
 if uploaded_file is not None:
-    byte_data = uploaded_file.getvalue()
-    data = byte_data.decode("utf-8")
-    df = preprocessor.preprocess(data)
+    is_valid=False
+    try:
+        byte_data = uploaded_file.getvalue()
+        data = byte_data.decode("utf-8")
+        is_valid = preprocessor.is_valid(data)
+        if is_valid:
+            df = preprocessor.preprocess(data)
+            user_list = df['users'].unique().tolist()
+            user_list.remove('group_notification')
+            user_list.sort()
+            user_list.insert(0, 'Overall')
+            selected_user = st.sidebar.selectbox('Show Analysis wrt', user_list)
+        else:
+            st.warning('Please upload valid chat file!', icon="⚠️")
+    except:
+        st.warning('An unexpected error has occurred!', icon="⚠️")
 
-    user_list = df['users'].unique().tolist()
-    user_list.remove('group_notification')
-    user_list.sort()
-    user_list.insert(0,'Overall')
-    selected_user = st.sidebar.selectbox('Show Analysis wrt',user_list)
 
-    if st.sidebar.button("Show Analysis"):
+    if st.sidebar.button("Show Analysis") & is_valid:
         # --------------- GENERAL STATS -----------------#
         num_messages, num_words, num_media, num_linkes = helper.fetch_stats(selected_user, df)
         st.header(":red[Whatsapp] Chat Analyzer")
